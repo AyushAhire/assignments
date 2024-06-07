@@ -26,20 +26,21 @@ jobs:
         run: |
           docker buildx build --platform linux/amd64 -t docker.io/disasterme/wisecrow:latest --push .
 
-      - name: Set up kubectl
-        uses: azure/setup-kubectl@v1
-        with:
-          version: 'latest'
-          
       - name: Create .kube directory
-        run: |
-          mkdir -p $HOME/.kube    
+        run: mkdir -p $HOME/.kube
 
       - name: Configure kubectl
         run: |
           echo "${{ secrets.KUBE_CONFIG_DATA }}" | base64 --decode > $HOME/.kube/config
+        env:
+          KUBECONFIG: $HOME/.kube/config
+
+      - name: Set kubectl context
+        run: kubectl config use-context your-cluster-context
 
       - name: Deploy to Kubernetes
         run: |
           kubectl apply -f deployment.yaml
           kubectl apply -f service.yaml
+        env:
+          KUBECONFIG: $HOME/.kube/config
